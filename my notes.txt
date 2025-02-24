@@ -1,0 +1,6 @@
+--install redis in container locallly
+- use docker desktop & pm2
+
+- docker run --name my-redis -d -p 6379:6379 redis
+- pm2 start server.js --name backend-api
+- pm2 start worker.js --name queue-worker

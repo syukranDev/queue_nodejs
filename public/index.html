@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Simulation</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        .ongoing { background-color: yellow; }
+        .completed { background-color: lightgreen; }
+    </style>
+</head>
+<body>
+
+    <button id="updateStatusBtn">Update Status</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr data-id="1"><td>1</td><td class="status">Pending</td></tr>
+            <tr data-id="2"><td>2</td><td class="status">Pending</td></tr>
+            <tr data-id="3"><td>3</td><td class="status">Pending</td></tr>
+            <tr data-id="4"><td>4</td><td class="status">Pending</td></tr>
+            <tr data-id="5"><td>5</td><td class="status">Pending</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const socket = io("http://localhost:3000");
+
+        $("#updateStatusBtn").click(async function () {
+            // Get all table rows
+            let rows = [];
+            $("#tableBody tr").each(function () {
+                let id = $(this).data("id");
+                rows.push({ id, status: "Pending" });
+            });
+
+            // Send to backend
+            await fetch("/start-task", { 
+                method: "POST", 
+                body: JSON.stringify({ rows }), 
+                headers: { "Content-Type": "application/json" }
+            });
+        });
+
+        // Listen for real-time updates
+        socket.on("updateTable", (data) => {
+            $("#tableBody").html("");
+            data.forEach(row => {
+                $("#tableBody").append(`
+                    <tr data-id="${row.id}">
+                        <td>${row.id}</td>
+                        <td class="status ${row.status === 'Ongoing' ? 'ongoing' : row.status === 'Completed' ? 'completed' : ''}">
+                            ${row.status}
+                        </td>
+                    </tr>
+                `);
+            });
+        });
+    </script>
+
+</body>
+</html>
